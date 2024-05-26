@@ -1,20 +1,11 @@
-// planeta.cpp
 #include "planeta.h"
+#include <cmath>
 
-Planeta::Planeta(double masa, double radio, const QVector2D &pos, const QVector2D &vel)
-    : QGraphicsEllipseItem(-radio, -radio, 2*radio, 2*radio),
-    masa(masa), velocidad(vel) {
-    setPos(pos.toPointF());
-}
-
-void Planeta::actualizarPosicion(double dt) {
-    velocidad += aceleracion * dt;
-    setPos(pos() + velocidad.toPointF() * dt);
-    aceleracion = QVector2D();  // Resetear la aceleración para el próximo paso
-}
-
-void Planeta::aplicarFuerza(const QVector2D &fuerza) {
-    aceleracion += fuerza / masa;
+Planeta::Planeta(double masa, double radio, QVector2D posicion, QVector2D velocidad, QColor color)
+    : masa(masa), radio(radio), posicion(posicion), velocidad(velocidad), color(color), posicionAnterior(posicion) {
+    setRect(-radio, -radio, 2 * radio, 2 * radio);
+    setBrush(color);
+    setPen(QPen(color));
 }
 
 double Planeta::getMasa() const {
@@ -22,9 +13,26 @@ double Planeta::getMasa() const {
 }
 
 QVector2D Planeta::getPosicion() const {
-    return QVector2D(pos());
+    return posicion;
 }
 
-QVector2D Planeta::getVelocidad() const {
-    return velocidad;
+void Planeta::aplicarFuerza(const QVector2D &fuerza) {
+    fuerzaAcumulada += fuerza;
+}
+
+void Planeta::actualizarPosicion(double dt) {
+    QVector2D aceleracion = fuerzaAcumulada / masa;
+    velocidad += aceleracion * dt;
+    posicionAnterior = posicion; // Almacenar la posición anterior
+    posicion += velocidad * dt + 0.5 * aceleracion * dt * dt;
+    setPos(posicion.toPointF());
+    fuerzaAcumulada = QVector2D(); // Resetear fuerza acumulada
+}
+
+double Planeta::getRadio() const {
+    return radio;
+}
+
+QColor Planeta::getColor() const {
+    return color;
 }

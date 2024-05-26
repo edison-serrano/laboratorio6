@@ -1,8 +1,9 @@
-// mainwindow.cpp
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QVector2D>
 #include <cmath>
+#include <QColor>
+#include <algorithm>
 
 const double G = 6.6738e-11;
 
@@ -41,7 +42,11 @@ void MainWindow::agregarCuerpo() {
         QVector2D pos(ui->lineEditPosX->text().toDouble(), ui->lineEditPosY->text().toDouble());
         QVector2D vel(ui->lineEditVelX->text().toDouble(), ui->lineEditVelY->text().toDouble());
 
-        Planeta *planeta = new Planeta(masa, radio, pos, vel);
+        // Lista de colores predefinidos
+        QList<QColor> colores = {Qt::red, Qt::green, Qt::blue, Qt::yellow, Qt::cyan, Qt::magenta};
+        QColor color = colores[cuerposAgregados % colores.size()];
+
+        Planeta *planeta = new Planeta(masa, radio, pos, vel, color);
         planetas.append(planeta);
         scene->addItem(planeta);
 
@@ -64,6 +69,32 @@ void MainWindow::limpiarCampos() {
 }
 
 void MainWindow::iniciarSimulacion() {
+    if (planetas.isEmpty()) return;
+
+    // Identificar la estrella
+    Planeta* estrella = *std::max_element(planetas.begin(), planetas.end(), [](Planeta* p1, Planeta* p2) {
+        if (p1->getMasa() == p2->getMasa()) {
+            return p1->getRadio() > p2->getRadio(); // Menor radio
+        }
+        return p1->getMasa() < p2->getMasa();
+    });
+
+    // Ajustar las velocidades de los demás cuerpos para que orbiten alrededor de la estrella
+    for (Planeta* planeta : planetas) {
+        if (planeta != estrella) {
+            QVector2D dir = planeta->getPosicion() - estrella->getPosicion();
+            double distancia = dir.length();
+            double velocidadOrbital = std::sqrt(G * estrella->getMasa() / distancia);
+
+            // Vector velocidad perpendicular al vector dirección
+            QVector2D velPerpendicular(-dir.y(), dir.x());
+            velPerpendicular.normalize();
+            velPerpendicular *= velocidadOrbital;
+
+            planeta->aplicarFuerza(planeta->getMasa() * velPerpendicular / 0.016); // Ajustar la velocidad inicial
+        }
+    }
+
     timer->start(16);  // Aproximadamente 60 FPS
 }
 
@@ -79,6 +110,11 @@ void MainWindow::detenerSimulacion() {
 void MainWindow::actualizarSimulacion() {
     calcularGravedad();
     for (Planeta* planeta : planetas) {
+        // Dibujar la estela
+        scene->addLine(planeta->getPosicion().x(), planeta->getPosicion().y(),
+                       planeta->pos().x(), planeta->pos().y(),
+                       QPen(planeta->getColor()));
+
         planeta->actualizarPosicion(0.016);  // Aproximadamente 60 FPS
     }
 }
