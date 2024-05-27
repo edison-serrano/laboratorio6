@@ -6,6 +6,7 @@
 #include <algorithm>
 
 const double G = 6.6738e-11;
+const double SCALE_FACTOR = 1e-2; // Ajusta este factor según sea necesario
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -38,8 +39,8 @@ MainWindow::~MainWindow() {
 void MainWindow::agregarCuerpo() {
     if (cuerposAgregados < cantidadCuerpos) {
         double masa = ui->lineEditMasa->text().toDouble();
-        double radio = ui->lineEditRadio->text().toDouble();
-        QVector2D pos(ui->lineEditPosX->text().toDouble(), ui->lineEditPosY->text().toDouble());
+        double radio = ui->lineEditRadio->text().toDouble() * SCALE_FACTOR; // Escalar el radio
+        QVector2D pos(ui->lineEditPosX->text().toDouble() * SCALE_FACTOR, ui->lineEditPosY->text().toDouble() * SCALE_FACTOR); // Escalar la posición
         QVector2D vel(ui->lineEditVelX->text().toDouble(), ui->lineEditVelY->text().toDouble());
 
         // Lista de colores predefinidos
@@ -49,6 +50,8 @@ void MainWindow::agregarCuerpo() {
         Planeta *planeta = new Planeta(masa, radio, pos, vel, color);
         planetas.append(planeta);
         scene->addItem(planeta);
+
+        estrella.agregarPlaneta(planeta);
 
         cuerposAgregados++;
         limpiarCampos(); // Limpiar los campos después de agregar un cuerpo
@@ -70,30 +73,6 @@ void MainWindow::limpiarCampos() {
 
 void MainWindow::iniciarSimulacion() {
     if (planetas.isEmpty()) return;
-
-    // Identificar la estrella
-    Planeta* estrella = *std::max_element(planetas.begin(), planetas.end(), [](Planeta* p1, Planeta* p2) {
-        if (p1->getMasa() == p2->getMasa()) {
-            return p1->getRadio() > p2->getRadio(); // Menor radio
-        }
-        return p1->getMasa() < p2->getMasa();
-    });
-
-    // Ajustar las velocidades de los demás cuerpos para que orbiten alrededor de la estrella
-    for (Planeta* planeta : planetas) {
-        if (planeta != estrella) {
-            QVector2D dir = planeta->getPosicion() - estrella->getPosicion();
-            double distancia = dir.length();
-            double velocidadOrbital = std::sqrt(G * estrella->getMasa() / distancia);
-
-            // Vector velocidad perpendicular al vector dirección
-            QVector2D velPerpendicular(-dir.y(), dir.x());
-            velPerpendicular.normalize();
-            velPerpendicular *= velocidadOrbital;
-
-            planeta->aplicarFuerza(planeta->getMasa() * velPerpendicular / 0.016); // Ajustar la velocidad inicial
-        }
-    }
 
     timer->start(16);  // Aproximadamente 60 FPS
 }
@@ -135,3 +114,4 @@ void MainWindow::calcularGravedad() {
         p1->aplicarFuerza(fuerzaTotal);
     }
 }
+

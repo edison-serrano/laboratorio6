@@ -3,6 +3,8 @@
 
 Planeta::Planeta(double masa, double radio, QVector2D posicion, QVector2D velocidad, QColor color)
     : masa(masa), radio(radio), posicion(posicion), velocidad(velocidad), color(color), posicionAnterior(posicion) {
+    // Asegúrate de establecer la posición del QGraphicsEllipseItem correctamente
+    setPos(posicion.toPointF());
     setRect(-radio, -radio, 2 * radio, 2 * radio);
     setBrush(color);
     setPen(QPen(color));
@@ -35,4 +37,8 @@ double Planeta::getRadio() const {
 
 QColor Planeta::getColor() const {
     return color;
+}
+
+void Planeta::setVelocidad(const QVector2D& nuevaVelocidad) {
+    velocidad = nuevaVelocidad;
 }

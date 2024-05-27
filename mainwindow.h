@@ -1,4 +1,3 @@
-// mainwindow.h
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -6,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QTimer>
 #include "planeta.h"
+#include "estrella.h"
 
 namespace Ui {
 class MainWindow;
@@ -29,6 +29,7 @@ private:
     QGraphicsScene *scene;
     QTimer *timer;
     QVector<Planeta*> planetas;
+    Estrella estrella;
     int cantidadCuerpos;
     int cuerposAgregados;
 

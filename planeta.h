@@ -16,6 +16,7 @@ public:
     void actualizarPosicion(double dt);
     double getRadio() const;
     QColor getColor() const; // Método para obtener el color
+    void setVelocidad(const QVector2D& nuevaVelocidad);
 
 private:
     double masa;
